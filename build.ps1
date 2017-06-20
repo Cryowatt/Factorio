@@ -1,24 +1,26 @@
 [cmdletbinding()]
 param()
-$releaseVersions = @(
-    '0.12.35',
-    '0.13.20',
-    '0.14.23');
+$availableVersions = Invoke-RestMethod https://updater.factorio.com/get-available-versions
+$stable = [version]($availableVersions.'core-linux_headless64' | Where-Object { $_.stable } | Select-Object -ExpandProperty stable)
+$allVersions = $availableVersions.'core-linux_headless64' | ForEach-Object { $_.from; $_.to } | Select-Object -Unique | ForEach-Object { [version] $_ }
 
-$experimentalVersions = @(
-    '0.15.16',
-    '0.15.18',
-    '0.15.19',
-    '0.15.20',
-    '0.15.21');
-
-$releaseVersions + $experimentalVersions | ForEach-Object {
-    Write-Progress -Activity "Building image for version $_"
-    docker build --build-arg FACTORIO_VERSION=$_ --tag cryowatt/factorio:$_ .
+$allVersions | ForEach-Object {
+    try
+    {
+        Write-Verbose "Checking for version $_"
+        Invoke-WebRequest -Method HEAD https://www.factorio.com/get-download/$_/headless/linux64 -ErrorAction SilentlyContinue | Write-Debug
+        Write-Progress -Activity "Building image for version $_"
+        docker build --build-arg FACTORIO_VERSION=$_ --tag cryowatt/factorio:$_ .
+    }
+    catch
+    {
+    }
 }
 
-$latestReleaseVersion = $releaseVersions | Sort-Object -Descending | Select-Object -First 1
-docker tag cryowatt/factorio:$latestReleaseVersion cryowatt/factorio:latest
+docker tag cryowatt/factorio:$stable cryowatt/factorio:latest
 
-$latestExperimentalVersion = $experimentalVersions | Sort-Object -Descending | Select-Object -First 1
+$latestExperimentalVersion = $allVersions | Sort-Object -Descending | Select-Object -First 1
 docker tag cryowatt/factorio:$latestExperimentalVersion cryowatt/factorio:experimental
+
+#todo
+#docker images | ConvertFrom-String -PropertyNames @('Repository','Tag','ImageId') | % { docker push "$($_.Repository)$($_.Tag)"}
