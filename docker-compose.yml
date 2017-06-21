@@ -1,8 +1,11 @@
 version: '2'
 services:
   factorio:
-    image: cryowatt/factorio:0.14.23
+    build:
+      context: .
+      args:
+        FACTORIO_VERSION: 0.14.23
     ports:
       - "34197:34197/udp"
     volumes:
-      - 'S:\Factorio:/var/factorio/saves/'
+      - './Saves:/var/factorio/saves/'
