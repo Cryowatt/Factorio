@@ -10,7 +10,9 @@ $allVersions | ForEach-Object {
         Write-Verbose "Checking for version $_"
         Invoke-WebRequest -Method HEAD https://www.factorio.com/get-download/$_/headless/linux64 -ErrorAction SilentlyContinue | Write-Debug
         Write-Progress -Activity "Building image for version $_"
+        docker pull cryowatt/factorio:$_
         docker build --build-arg FACTORIO_VERSION=$_ --tag cryowatt/factorio:$_ .
+        docker push cryowatt/factorio:$_
     }
     catch
     {
@@ -18,9 +20,8 @@ $allVersions | ForEach-Object {
 }
 
 docker tag cryowatt/factorio:$stable cryowatt/factorio:latest
+docker push cryowatt/factorio:latest
 
 $latestExperimentalVersion = $allVersions | Sort-Object -Descending | Select-Object -First 1
 docker tag cryowatt/factorio:$latestExperimentalVersion cryowatt/factorio:experimental
-
-#todo
-#docker images | ConvertFrom-String -PropertyNames @('Repository','Tag','ImageId') | % { docker push "$($_.Repository)$($_.Tag)"}
+docker push cryowatt/factorio:experimental
