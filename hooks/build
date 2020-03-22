@@ -1,6 +1,6 @@
 #!/bin/bash -x
 docker-compose build get-version
-export FACTORIO_VERSION=`docker-compose run -T get-version 0.18`
+export FACTORIO_VERSION=`docker-compose run -T get-version $DOCKER_TAG`
 docker build --build-arg FACTORIO_VERSION=${FACTORIO_VERSION} -f $DOCKERFILE_PATH -t $IMAGE_NAME .
 docker tag $IMAGE_NAME $DOCKER_REPO:$FACTORIO_VERSION
 docker push $DOCKER_REPO:$FACTORIO_VERSION
