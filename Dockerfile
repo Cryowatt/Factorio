@@ -21,8 +21,6 @@ RUN ln -s /opt/factorio/bin/x64/factorio /usr/local/bin/factorio; \
 
 USER factorio:factorio
 
-RUN /usr/local/bin/factorio --create /var/factorio/saves/default.zip
-
 EXPOSE 34197
 
 ENTRYPOINT [ "/usr/local/bin/factorio", "--config", "/etc/factorio/config" ]
