@@ -1,0 +1,101 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "saves_storage_account_name": {
+            "type": "String"
+        },
+        "saves_storage_account_key": {
+            "type": "String"
+        },
+        "log_analytics_workspace_id": {
+            "type": "String"
+        },
+        "log_analytics_workspace_key": {
+            "type": "String"
+        },
+        "factorio_container_name": {
+            "defaultValue": "hahntorio",
+            "type": "String"
+        },
+        "factorio_version": {
+            "type": "String"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ContainerInstance/containerGroups",
+            "apiVersion": "2018-10-01",
+            "name": "[parameters('factorio_container_name')]",
+            "location": "westus2",
+            "properties": {
+                "containers": [
+                    {
+                        "name": "hahntorio",
+                        "properties": {
+                            "image": "[concat('cryowatt/factorio:', parameters('factorio_version'))]",
+                            "ports": [
+                                {
+                                    "protocol": "UDP",
+                                    "port": 34197
+                                }
+                            ],
+                            "volumeMounts": [
+                                {
+                                    "name": "factoriosaves",
+                                    "mountPath": "/var/factorio/saves/"
+                                }
+                            ],
+                            "environmentVariables": [
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": 1.5,
+                                    "cpu": 1
+                                }
+                            },
+                            "command": [
+                                "/usr/local/bin/factorio",
+                                "--config",
+                                "/etc/factorio/config",
+                                "--start-server-load-latest",
+                                "--server-settings",
+                                "/var/factorio/saves/hahntorio-server.json"
+                            ]
+                        }
+                    }
+                ],
+                "restartPolicy": "OnFailure",
+                "ipAddress": {
+                    "ports": [
+                        {
+                            "protocol": "UDP",
+                            "port": 34197
+                        }
+                    ],
+                    "type": "Public",
+                    "dnsNameLabel": "[parameters('factorio_container_name')]"
+                },
+                "osType": "Linux",
+                "diagnostics": {
+                    "logAnalytics": {
+                        "workspaceId": "[parameters('log_analytics_workspace_id')]",
+                        "workspaceKey": "[parameters('log_analytics_workspace_key')]"
+                    }
+                },
+                "volumes": [
+                    {
+                        "name": "factoriosaves",
+                        "azureFile": {
+                            "shareName": "factoriosaves",
+                            "storageAccountName": "[parameters('saves_storage_account_name')]",
+                            "storageAccountKey": "[parameters('saves_storage_account_key')]"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

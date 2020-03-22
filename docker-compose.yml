@@ -1,11 +1,13 @@
-version: '2'
+version: '3.3'
+
 services:
+  get-version:
+    build:
+      context: .
+      dockerfile: Version.Dockerfile
+      
   factorio:
     build:
       context: .
       args:
-        FACTORIO_VERSION: 0.14.23
-    ports:
-      - "34197:34197/udp"
-    volumes:
-      - './Saves:/var/factorio/saves/'
+        FACTORIO_VERSION: ${FACTORIO_VERSION}
